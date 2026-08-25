@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ledger & Groove — Learn SQL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root{
+  --ink:#101720;
+  --ink-2:#161f2b;
+  --ink-3:#1d2733;
+  --line:#2a3644;
+  --paper:#eee7d8;
+  --paper-dim:#a9b3ba;
+  --teal:#5fc4ae;
+  --teal-dim:#3a7d70;
+  --amber:#e4a94a;
+  --amber-dim:#8a6a30;
+  --red:#e2705f;
+  --font-display:'IBM Plex Mono', monospace;
+  --font-body:'IBM Plex Sans', sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--ink);
+  color:var(--paper);
+  font-family:var(--font-body);
+  min-height:100vh;
+}
+::selection{background:var(--teal-dim); color:var(--paper);}
+
+/* ---------- layout shell ---------- */
+.app{
+  display:grid;
+  grid-template-columns:260px 1fr;
+  min-height:100vh;
+}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr;}
+  .sidebar{position:static; height:auto; border-right:none; border-bottom:1px solid var(--line);}
+}
+
+/* ---------- sidebar ---------- */
+.sidebar{
+  background:var(--ink-2);
+  border-right:1px solid var(--line);
+  padding:28px 0 20px;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+}
+.brand{
+  padding:0 22px 20px;
+  border-bottom:1px solid var(--line);
+  margin-bottom:14px;
+}
+.brand .mark{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:13px;
+  letter-spacing:.12em;
+  color:var(--amber);
+  text-transform:uppercase;
+}
+.brand h1{
+  font-family:var(--font-display);
+  font-size:19px;
+  font-weight:600;
+  margin:6px 0 4px;
+  color:var(--paper);
+  line-height:1.3;
+}
+.brand p{
+  font-size:12.5px;
+  color:var(--paper-dim);
+  margin:0;
+  line-height:1.5;
+}
+
+.nav-list{list-style:none; margin:0; padding:0 12px;}
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:9px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  color:var(--paper-dim);
+  font-size:13.5px;
+  transition:background .15s ease, color .15s ease;
+  border-left:2px solid transparent;
+}
+.nav-item .idx{
+  font-family:var(--font-display);
+  font-size:11px;
+  color:var(--paper-dim);
+  width:18px;
+  flex-shrink:0;
+}
+.nav-item:hover{background:var(--ink-3); color:var(--paper);}
+.nav-item.active{
+  background:var(--ink-3);
+  color:var(--paper);
+  border-left-color:var(--teal);
+}
+.nav-item.active .idx{color:var(--teal);}
+.nav-item .done{
+  margin-left:auto;
+  color:var(--teal);
+  font-size:12px;
+  opacity:0;
+}
+.nav-item.complete .done{opacity:1;}
+
+.progress-wrap{padding:16px 22px 4px;}
+.progress-track{
+  height:4px;
+  background:var(--ink-3);
+  border-radius:2px;
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg, var(--teal-dim), var(--teal));
+  width:0%;
+  transition:width .4s ease;
+}
+.progress-label{
+  font-size:11px;
+  color:var(--paper-dim);
+  margin-top:6px;
+  font-family:var(--font-display);
+}
+
+/* ---------- main ---------- */
+.main{padding:44px 48px 90px; max-width:860px;}
+@media (max-width:860px){ .main{padding:28px 20px 70px;} }
+
+.lesson{display:none;}
+.lesson.active{display:block; animation:rise .35s ease;}
+@keyframes rise{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+
+.eyebrow{
+  font-family:var(--font-display);
+  font-size:12px;
+  color:var(--amber);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+h2.title{
+  font-family:var(--font-display);
+  font-size:30px;
+  font-weight:600;
+  margin:0 0 18px;
+  color:var(--paper);
+  line-height:1.25;
+}
+.lede{
+  font-size:15.5px;
+  line-height:1.7;
+  color:#cfc9ba;
+  margin:0 0 26px;
+  max-width:640px;
+}
+.lede code, p code, li code{
+  font-family:var(--font-display);
+  background:var(--ink-3);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  font-size:.88em;
+  color:var(--teal);
+}
+
+section.block{margin-bottom:34px;}
+h3.sub{
+  font-family:var(--font-display);
+  font-size:14px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--paper-dim);
+  margin:0 0 12px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--line);
+}
+
+/* worked example */
+.example{
+  background:var(--ink-2);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:18px 20px;
+  margin-bottom:16px;
+}
+.example .exp-text{font-size:14px; color:#cfc9ba; line-height:1.65; margin:0 0 12px;}
+pre.code{
+  font-family:var(--font-display);
+  background:var(--ink);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:14px 16px;
+  font-size:13.5px;
+  line-height:1.6;
+  color:var(--teal);
+  overflow-x:auto;
+  margin:0;
+}
+.kw{color:var(--amber);}
+
+/* query console (shared by demo + tasks) */
+.console{
+  background:var(--ink-2);
+  border:1px solid var(--line);
+  border-radius:10px;
+  overflow:hidden;
+  margin-top:10px;
+}
+.console-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 14px;
+  background:var(--ink-3);
+  border-bottom:1px solid var(--line);
+  font-family:var(--font-display);
+  font-size:11px;
+  color:var(--paper-dim);
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+textarea.sql-input{
+  width:100%;
+  min-height:78px;
+  background:var(--ink);
+  color:var(--paper);
+  border:none;
+  outline:none;
+  font-family:var(--font-display);
+  font-size:13.5px;
+  line-height:1.6;
+  padding:14px 16px;
+  resize:vertical;
+}
+.console-actions{
+  display:flex;
+  gap:8px;
+  padding:10px 14px;
+  border-top:1px solid var(--line);
+  align-items:center;
+  flex-wrap:wrap;
+}
+button{
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:12.5px;
+  border-radius:6px;
+  border:1px solid var(--line);
+  background:var(--ink-3);
+  color:var(--paper);
+  padding:8px 14px;
+  cursor:pointer;
+  transition:border-color .15s ease, color .15s ease, background .15s ease;
+}
+button:hover{border-color:var(--teal); color:var(--teal);}
+button.primary{
+  background:var(--teal-dim);
+  border-color:var(--teal-dim);
+  color:#0d1712;
+  background:var(--teal);
+}
+button.primary:hover{filter:brightness(1.08); color:#0d1712;}
+button.ghost{background:transparent;}
+button:disabled{opacity:.4; cursor:not-allowed;}
+
+.result-wrap{padding:0 14px 14px;}
+.result-msg{
+  font-family:var(--font-display);
+  font-size:12.5px;
+  padding:10px 2px;
+}
+.result-msg.error{color:var(--red);}
+.result-msg.ok{color:var(--teal);}
+table.result-table{
+  width:100%;
+  border-collapse:collapse;
+  font-family:var(--font-display);
+  font-size:12.5px;
+  margin-top:4px;
+}
+table.result-table th{
+  text-align:left;
+  color:var(--amber);
+  border-bottom:1px solid var(--line);
+  padding:6px 10px;
+  white-space:nowrap;
+}
+table.result-table td{
+  padding:6px 10px;
+  border-bottom:1px solid var(--ink-3);
+  color:#d8d2c4;
+  white-space:nowrap;
+}
+table.result-table tr:hover td{background:var(--ink-3);}
+.table-scroll{overflow-x:auto; max-height:280px; overflow-y:auto;}
+
+/* tasks */
+.task{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:18px 20px;
+  margin-bottom:18px;
+  background:var(--ink-2);
+}
+.task-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:8px;
+}
+.task-num{
+  font-family:var(--font-display);
+  font-size:11px;
+  color:var(--ink);
+  background:var(--paper-dim);
+  border-radius:4px;
+  padding:2px 7px;
+  flex-shrink:0;
+}
+.task.solved .task-num{background:var(--teal); }
+.task-prompt{font-size:14.5px; color:var(--paper); line-height:1.6; margin:0;}
+.task-status{
+  margin-left:auto;
+  font-family:var(--font-display);
+  font-size:11px;
+  color:var(--paper-dim);
+}
+.task.solved .task-status{color:var(--teal);}
+.hint-row{margin-top:10px;}
+.hint-text{
+  font-size:12.5px;
+  color:var(--paper-dim);
+  border-left:2px solid var(--amber-dim);
+  padding:6px 10px;
+  margin-top:8px;
+  display:none;
+  background:var(--ink);
+}
+.hint-text.show{display:block;}
+
+/* schema reference */
+.schema-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
+  gap:12px;
+}
+.schema-card{
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:12px 14px;
+  background:var(--ink-2);
+}
+.schema-card h4{
+  font-family:var(--font-display);
+  font-size:12.5px;
+  color:var(--teal);
+  margin:0 0 8px;
+}
+.schema-card ul{list-style:none; margin:0; padding:0;}
+.schema-card li{
+  font-family:var(--font-display);
+  font-size:11.5px;
+  color:var(--paper-dim);
+  padding:2px 0;
+}
+.schema-card li b{color:#cfc9ba; font-weight:500;}
+
+/* footer nav */
+.lesson-footer{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:36px;
+  padding-top:20px;
+  border-top:1px solid var(--line);
+}
+.foot-btn{
+  font-family:var(--font-display);
+  font-size:12.5px;
+  padding:10px 16px;
+}
+.completion-banner{
+  display:none;
+  align-items:center;
+  gap:10px;
+  background:var(--ink-3);
+  border:1px solid var(--teal-dim);
+  color:var(--teal);
+  font-family:var(--font-display);
+  font-size:12.5px;
+  padding:10px 14px;
+  border-radius:8px;
+  margin-top:18px;
+}
+.completion-banner.show{display:flex;}
+
+.loading-note{
+  font-family:var(--font-display);
+  font-size:12.5px;
+  color:var(--paper-dim);
+  padding:40px 0;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <nav class="sidebar">
+    <div class="brand">
+      <div class="mark">Ledger &amp; Groove</div>
+      <h1>SQL, from a record shop's books</h1>
+      <p>Eight lessons. Every query runs for real against a small vinyl-shop database, right here.</p>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">0 / 8 lessons complete</div>
+    </div>
+    <ul class="nav-list" id="navList"></ul>
+  </nav>
+
+  <main class="main">
+    <div id="lessonsRoot">
+      <div class="loading-note">Loading the database engine…</div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+<script>
+(function(){
+
+/* ============================================================
+   1. SAMPLE DATABASE — a small vinyl record shop
+   ============================================================ */
+const SCHEMA_SQL = `
+CREATE TABLE artists (
+  id INTEGER PRIMARY KEY,
+  name TEXT,
+  country TEXT,
+  formed_year INTEGER
+);
+CREATE TABLE albums (
+  id INTEGER PRIMARY KEY,
+  artist_id INTEGER,
+  title TEXT,
+  release_year INTEGER,
+  genre TEXT,
+  price REAL,
+  stock INTEGER
+);
+CREATE TABLE customers (
+  id INTEGER PRIMARY KEY,
+  name TEXT,
+  city TEXT,
+  joined_year INTEGER
+);
+CREATE TABLE purchases (
+  id INTEGER PRIMARY KEY,
+  customer_id INTEGER,
+  album_id INTEGER,
+  purchase_date TEXT,
+  quantity INTEGER
+);
+
+INSERT INTO artists (id,name,country,formed_year) VALUES
+ (1,'Nebula Choir','UK',1998),
+ (2,'Salt Horizon','USA',2005),
+ (3,'Kaoru Ito','Japan',2011),
+ (4,'The Loam','Ireland',1994),
+ (5,'Dust Radio','USA',2016),
+ (6,'Marguerite','France',2001),
+ (7,'Copperline','Canada',2009);
+
+INSERT INTO albums (id,artist_id,title,release_year,genre,price,stock) VALUES
+ (1,1,'Low Tide Signals',2001,'Ambient',18.50,12),
+ (2,1,'Harbor Static',2004,'Ambient',21.00,4),
+ (3,2,'Red Clay Radio',2009,'Folk Rock',19.99,7),
+ (4,2,'Salt Horizon',2005,'Folk Rock',24.00,0),
+ (5,3,'Paper Lantern',2015,'Jazz',22.50,9),
+ (6,3,'Blue Hour',2019,'Jazz',26.00,2),
+ (7,4,'Mossback',1996,'Folk',15.00,15),
+ (8,4,'Wet Stone',1999,'Folk',15.00,3),
+ (9,4,'The Loam',1994,'Folk',20.00,6),
+ (10,5,'AM Drift',2018,'Indie Rock',17.50,11),
+ (11,5,'Static Bloom',2021,'Indie Rock',23.00,5),
+ (12,6,'Verre',2003,'Chanson',19.00,8),
+ (13,6,'Fenetre',2007,'Chanson',19.00,0),
+ (14,7,'Copperline',2010,'Country',16.50,10),
+ (15,7,'Long Grass',2013,'Country',18.00,1);
+
+INSERT INTO customers (id,name,city,joined_year) VALUES
+ (1,'Priya Nair','Leeds',2019),
+ (2,'Tom Everly','Austin',2020),
+ (3,'Haruto Sato','Osaka',2021),
+ (4,'Maeve Doyle','Cork',2018),
+ (5,'Jonas Reim','Berlin',2022),
+ (6,'Elin Sund','Oslo',2020),
+ (7,'Carla Nunes','Lisbon',2023),
+ (8,'Sam Okafor','London',2019);
+
+INSERT INTO purchases (id,customer_id,album_id,purchase_date,quantity) VALUES
+ (1,1,1,'2023-01-14',1),
+ (2,1,7,'2023-02-02',2),
+ (3,2,3,'2023-01-20',1),
+ (4,3,5,'2023-03-11',1),
+ (5,3,6,'2023-05-19',1),
+ (6,4,9,'2023-01-30',1),
+ (7,4,8,'2023-04-02',2),
+ (8,5,12,'2023-02-14',1),
+ (9,6,10,'2023-06-01',1),
+ (10,6,11,'2023-06-15',2),
+ (11,7,14,'2023-03-22',1),
+ (12,8,1,'2023-07-04',1),
+ (13,8,2,'2023-07-04',1),
+ (14,2,4,'2022-11-09',1),
+ (15,1,15,'2023-08-01',1),
+ (16,5,13,'2022-12-25',1),
+ (17,3,3,'2023-09-10',1),
+ (18,4,7,'2023-09-12',3);
+`;
+
+/* ============================================================
+   2. LESSON + TASK DEFINITIONS
+   ============================================================ */
+const lessons = [
+{
+  id:'select',
+  title:'Reading a table with SELECT',
+  eyebrow:'Lesson 1',
+  intro:`Every SQL query starts with what you want to see. <code>SELECT</code> names the columns, <code>FROM</code> names the table. Think of it as pointing at a spreadsheet and saying "give me these columns, from this sheet."`,
+  examples:[
+    {
+      text:`Get every column from <code>albums</code> using the wildcard <code>*</code>:`,
+      sql:`SELECT * FROM albums;`
+    },
+    {
+      text:`Pick specific columns, and rename one with <code>AS</code>:`,
+      sql:`SELECT title, price AS price_usd\nFROM albums;`
+    }
+  ],
+  tasks:[
+    {
+      prompt:`Select the <code>name</code> and <code>country</code> columns from <code>artists</code>.`,
+      starter:`SELECT ____ FROM artists;`,
+      solution:`SELECT name, country FROM artists;`,
+      hint:`List the two column names separated by a comma, right after SELECT.`
+    },
+    {
+      prompt:`Select every column from <code>customers</code>.`,
+      starter:`-- use the wildcard\nSELECT`,
+      solution:`SELECT * FROM customers;`,
+      hint:`The wildcard for "all columns" is a single asterisk: *`
+    },
+    {
+      prompt:`Select the <code>title</code> column from <code>albums</code>, renamed to <code>album_title</code>.`,
+      starter:`SELECT title FROM albums;`,
+      solution:`SELECT title AS album_title FROM albums;`,
+      hint:`AS lets you give a column an alias: SELECT col AS new_name`
+    }
+  ]
+},
+{
+  id:'where',
+  title:'Filtering rows with WHERE',
+  eyebrow:'Lesson 2',
+  intro:`<code>WHERE</code> keeps only the rows that match a condition. Combine conditions with <code>AND</code> / <code>OR</code>, match text patterns with <code>LIKE</code>, check membership with <code>IN</code>, and test ranges with <code>BETWEEN</code>.`,
+  examples:[
+    {
+      text:`Albums priced under 18:`,
+      sql:`SELECT title, price FROM albums\nWHERE price < 18;`
+    },
+    {
+      text:`Albums that are Folk and released after 1995:`,
+      sql:`SELECT title, genre, release_year FROM albums\nWHERE genre = 'Folk' AND release_year > 1995;`
+    },
+    {
+      text:`Artist names that start with "S", using LIKE:`,
+      sql:`SELECT name FROM artists\nWHERE name LIKE 'S%';`
+    }
+  ],
+  tasks:[
+    {
+      prompt:`Select albums (title, genre) where <code>genre</code> is <code>'Jazz'</code>.`,
+      starter:`SELECT title, genre FROM albums\nWHERE`,
+      solution:`SELECT title, genre FROM albums WHERE genre = 'Jazz';`,
+      hint:`Use WHERE genre = 'Jazz' — text values go in single quotes.`
+    },
+    {
+      prompt:`Select album titles where <code>stock</code> is 0 (out of stock).`,
+      starter:`SELECT title FROM albums\nWHERE`,
+      solution:`SELECT title FROM albums WHERE stock = 0;`,
+      hint:`WHERE stock = 0`
+    },
+    {
+      prompt:`Select customer names from <code>customers</code> who joined in 2019 or later (<code>joined_year >= 2019</code>).`,
+      starter:`SELECT name FROM customers\nWHERE`,
+      solution:`SELECT name FROM customers WHERE joined_year >= 2019;`,
+      hint:`Comparison operators work directly on numbers: joined_year >= 2019`
+    },
+    {
+      prompt:`Select album titles priced <code>BETWEEN 15 AND 20</code> (inclusive).`,
+      starter:`SELECT title FROM albums\nWHERE`,
+      solution:`SELECT title FROM albums WHERE price BETWEEN 15 AND 20;`,
+      hint:`BETWEEN 15 AND 20 includes both endpoints.`
+    }
+  ]
+},
+{
+  id:'sort',
+  title:'Sorting and limiting: ORDER BY, LIMIT, DISTINCT',
+  eyebrow:'Lesson 3',
+  intro:`<code>ORDER BY</code> sorts your results (add <code>DESC</code> for descending). <code>LIMIT</code> caps how many rows come back. <code>DISTINCT</code> removes duplicate values.`,
+  examples:[
+    {
+      text:`Cheapest albums first:`,
+      sql:`SELECT title, price FROM albums\nORDER BY price ASC;`
+    },
+    {
+      text:`Three most expensive albums:`,
+      sql:`SELECT title, price FROM albums\nORDER BY price DESC\nLIMIT 3;`
+    },
+    {
+      text:`Every distinct genre in the shop:`,
+      sql:`SELECT DISTINCT genre FROM albums;`
+    }
+  ],
+  tasks:[
+    {
+      prompt:`Select album titles and release years, ordered by <code>release_year</code> ascending (oldest first).`,
+      starter:`SELECT title, release_year FROM albums\nORDER BY`,
+      solution:`SELECT title, release_year FROM albums ORDER BY release_year ASC;`,
+      hint:`ORDER BY release_year ASC — ASC is actually the default, so you can omit it too.`
+    },
+    {
+      prompt:`Select the single most expensive album's title and price (just 1 row).`,
+      starter:`SELECT title, price FROM albums\nORDER BY price DESC\nLIMIT`,
+      solution:`SELECT title, price FROM albums ORDER BY price DESC LIMIT 1;`,
+      hint:`Sort descending by price, then LIMIT 1.`
+    },
+    {
+      prompt:`Select the distinct list of cities customers live in.`,
+      starter:`SELECT`,
+      solution:`SELECT DISTINCT city FROM customers;`,
+      hint:`SELECT DISTINCT city FROM customers;`
+    }
+  ]
+},
+{
+  id:'aggregate',
+  title:'Aggregate functions',
+  eyebrow:'Lesson 4',
+  intro:`Aggregate functions collapse many rows into one number: <code>COUNT</code>, <code>SUM</code>, <code>AVG</code>, <code>MIN</code>, <code>MAX</code>. Handy for totals and summaries across a whole table.`,
+  examples:[
+    {
+      text:`How many albums are in the shop?`,
+      sql:`SELECT COUNT(*) AS total_albums FROM albums;`
+    },
+    {
+      text:`Average album price:`,
+      sql:`SELECT AVG(price) AS avg_price FROM albums;`
+    },
+    {
+      text:`Cheapest and most expensive price:`,
+      sql:`SELECT MIN(price) AS cheapest, MAX(price) AS priciest FROM albums;`
+    }
+  ],
+  tasks:[
+    {
+      prompt:`Count the total number of customers. Name the result column <code>total_customers</code>.`,
+      starter:`SELECT COUNT(*) AS`,
+      solution:`SELECT COUNT(*) AS total_customers FROM customers;`,
+      hint:`COUNT(*) AS total_customers FROM customers`
+    },
+    {
+      prompt:`Find the total stock across all albums (sum of the <code>stock</code> column), named <code>total_stock</code>.`,
+      starter:`SELECT SUM(stock) AS`,
+      solution:`SELECT SUM(stock) AS total_stock FROM albums;`,
+      hint:`SUM(stock) adds up every row's stock value.`
+    },
+    {
+      prompt:`Find the earliest (minimum) <code>release_year</code> in <code>albums</code>, named <code>earliest_year</code>.`,
+      starter:`SELECT MIN(release_year) AS`,
+      solution:`SELECT MIN(release_year) AS earliest_year FROM albums;`,
+      hint:`MIN(release_year) AS earliest_year FROM albums`
+    }
+  ]
+},
+{
+  id:'groupby',
+  title:'Grouping data: GROUP BY and HAVING',
+  eyebrow:'Lesson 5',
+  intro:`<code>GROUP BY</code> buckets rows that share a value, so an aggregate function runs once per bucket instead of once for the whole table. <code>HAVING</code> filters those buckets after grouping (where <code>WHERE</code> filters rows before grouping).`,
+  examples:[
+    {
+      text:`Number of albums per genre:`,
+      sql:`SELECT genre, COUNT(*) AS album_count\nFROM albums\nGROUP BY genre;`
+    },
+    {
+      text:`Average price per genre, only genres with more than 1 album:`,
+      sql:`SELECT genre, AVG(price) AS avg_price\nFROM albums\nGROUP BY genre\nHAVING COUNT(*) > 1;`
+    }
+  ],
+  tasks:[
+    {
+      prompt:`For each <code>artist_id</code> in <code>albums</code>, count how many albums they have. Return <code>artist_id</code> and <code>COUNT(*) AS album_count</code>.`,
+      starter:`SELECT artist_id, COUNT(*) AS album_count\nFROM albums\nGROUP BY`,
+      solution:`SELECT artist_id, COUNT(*) AS album_count FROM albums GROUP BY artist_id;`,
+      hint:`GROUP BY artist_id groups all rows with the same artist together.`
+    },
+    {
+      prompt:`For each <code>city</code> in <code>customers</code>, count the customers there, as <code>customer_count</code>.`,
+      starter:`SELECT city, COUNT(*) AS customer_count\nFROM customers\nGROUP BY`,
+      solution:`SELECT city, COUNT(*) AS customer_count FROM customers GROUP BY city;`,
+      hint:`GROUP BY city`
+    },
+    {
+      prompt:`For each <code>genre</code>, show total stock as <code>total_stock</code>, but only include genres where the total stock is greater than 10.`,
+      starter:`SELECT genre, SUM(stock) AS total_stock\nFROM albums\nGROUP BY genre\nHAVING`,
+      solution:`SELECT genre, SUM(stock) AS total_stock FROM albums GROUP BY genre HAVING SUM(stock) > 10;`,
+      hint:`HAVING filters on the aggregated value: HAVING SUM(stock) > 10`
+    }
+  ]
+},
+{
+  id:'joins',
+  title:'Combining tables with JOIN',
+  eyebrow:'Lesson 6',
+  intro:`Data is split across tables to avoid repetition. <code>JOIN</code> stitches rows back together using a shared key. <code>INNER JOIN</code> keeps only matches on both sides; <code>LEFT JOIN</code> keeps every row from the left table even if there's no match on the right.`,
+  examples:[
+    {
+      text:`Every album with its artist's name (INNER JOIN):`,
+      sql:`SELECT albums.title, artists.name AS artist_name\nFROM albums\nJOIN artists ON albums.artist_id = artists.id;`
+    },
+    {
+      text:`Every artist, and how many albums they have — including artists with zero, using LEFT JOIN:`,
+      sql:`SELECT artists.name, COUNT(albums.id) AS album_count\nFROM artists\nLEFT JOIN albums ON albums.artist_id = artists.id\nGROUP BY artists.name;`
+    }
+  ],
+  tasks:[
+    {
+      prompt:`Join <code>purchases</code> to <code>customers</code> to list each purchase's <code>purchase_date</code> alongside the customer's <code>name</code>.`,
+      starter:`SELECT purchases.purchase_date, customers.name\nFROM purchases\nJOIN customers ON`,
+      solution:`SELECT purchases.purchase_date, customers.name FROM purchases JOIN customers ON purchases.customer_id = customers.id;`,
+      hint:`Match the foreign key to the primary key: purchases.customer_id = customers.id`
+    },
+    {
+      prompt:`Join <code>albums</code> to <code>artists</code> and select <code>albums.title</code> and <code>artists.country</code>, for albums where <code>artists.country = 'USA'</code>.`,
+      starter:`SELECT albums.title, artists.country\nFROM albums\nJOIN artists ON albums.artist_id = artists.id\nWHERE`,
+      solution:`SELECT albums.title, artists.country FROM albums JOIN artists ON albums.artist_id = artists.id WHERE artists.country = 'USA';`,
+      hint:`Add a WHERE clause after the JOIN: WHERE artists.country = 'USA'`
+    },
+    {
+      prompt:`Using a LEFT JOIN from <code>albums</code> to <code>purchases</code>, list every album's <code>title</code> with <code>COUNT(purchases.id) AS times_bought</code> — including albums never purchased.`,
+      starter:`SELECT albums.title, COUNT(purchases.id) AS times_bought\nFROM albums\nLEFT JOIN purchases ON purchases.album_id = albums.id\nGROUP BY`,
+      solution:`SELECT albums.title, COUNT(purchases.id) AS times_bought FROM albums LEFT JOIN purchases ON purchases.album_id = albums.id GROUP BY albums.title;`,
+      hint:`Group by albums.title so each album gets its own row and count.`
+    }
+  ]
+},
+{
+  id:'subqueries',
+  title:'Subqueries',
+  eyebrow:'Lesson 7',
+  intro:`A subquery is a query nested inside another one — useful when a filter depends on a value you need to calculate first, like "above the average price."`,
+  examples:[
+    {
+      text:`Albums priced above the shop's average price:`,
+      sql:`SELECT title, price FROM albums\nWHERE price > (SELECT AVG(price) FROM albums);`
+    },
+    {
+      text:`Customers who have made at least one purchase, using IN:`,
+      sql:`SELECT name FROM customers\nWHERE id IN (SELECT customer_id FROM purchases);`
+    }
+  ],
+  tasks:[
+    {
+      prompt:`Select album titles priced strictly below the shop's average price. (Hint: reuse the average-price subquery.)`,
+      starter:`SELECT title FROM albums\nWHERE price < (`,
+      solution:`SELECT title FROM albums WHERE price < (SELECT AVG(price) FROM albums);`,
+      hint:`WHERE price < (SELECT AVG(price) FROM albums)`
+    },
+    {
+      prompt:`Select artist names from <code>artists</code> whose <code>id</code> is <em>not</em> in the list of <code>artist_id</code>s that appear in <code>albums</code> — i.e. artists with no albums yet. (There should be none in this dataset — return an empty result to confirm every artist has at least one album.)`,
+      starter:`SELECT name FROM artists\nWHERE id NOT IN (`,
+      solution:`SELECT name FROM artists WHERE id NOT IN (SELECT artist_id FROM albums);`,
+      hint:`NOT IN (SELECT artist_id FROM albums) — an empty result means every artist has albums.`
+    }
+  ]
+},
+{
+  id:'modify',
+  title:'Changing data: INSERT, UPDATE, DELETE',
+  eyebrow:'Lesson 8',
+  intro:`So far every query only read data. These three statements change it: <code>INSERT</code> adds rows, <code>UPDATE</code> edits existing rows (always pair with <code>WHERE</code>!), and <code>DELETE</code> removes rows. This lesson's console works on a live copy of the database, so feel free to experiment.`,
+  examples:[
+    {
+      text:`Add a new album:`,
+      sql:`INSERT INTO albums (id, artist_id, title, release_year, genre, price, stock)\nVALUES (16, 5, 'New Signals', 2024, 'Indie Rock', 20.00, 8);`
+    },
+    {
+      text:`Update a price:`,
+      sql:`UPDATE albums SET price = 15.00 WHERE title = 'Blue Hour';`
+    },
+    {
+      text:`Delete an album that's out of stock:`,
+      sql:`DELETE FROM albums WHERE stock = 0;`
+    }
+  ],
+  tasks:[
+    {
+      prompt:`Insert a new customer: id 9, name 'Ines Duarte', city 'Porto', joined_year 2024. Then this task checks that <code>customers</code> now has 9 rows.`,
+      starter:`INSERT INTO customers (id, name, city, joined_year)\nVALUES`,
+      solution:`INSERT INTO customers (id, name, city, joined_year) VALUES (9, 'Ines Duarte', 'Porto', 2024);`,
+      hint:`VALUES (9, 'Ines Duarte', 'Porto', 2024);`,
+      checkType:'rowcount',
+      checkTable:'customers',
+      checkExpected:9
+    },
+    {
+      prompt:`Update album id 6 ('Blue Hour') so its <code>stock</code> becomes 20.`,
+      starter:`UPDATE albums SET stock = 20 WHERE`,
+      solution:`UPDATE albums SET stock = 20 WHERE id = 6;`,
+      hint:`WHERE id = 6 — always target UPDATE with a WHERE clause.`,
+      checkType:'query',
+      checkSolution:`SELECT stock FROM albums WHERE id = 6;`
+    },
+    {
+      prompt:`Delete every album with <code>stock = 0</code>.`,
+      starter:`DELETE FROM albums WHERE`,
+      solution:`DELETE FROM albums WHERE stock = 0;`,
+      hint:`DELETE FROM albums WHERE stock = 0;`,
+      checkType:'query',
+      checkSolution:`SELECT COUNT(*) AS n FROM albums WHERE stock = 0;`
+    }
+  ]
+}
+];
+
+/* ============================================================
+   3. ENGINE SETUP
+   ============================================================ */
+let SQL = null;
+let demoDb = null;         // fresh read-only-ish db reset per lesson demo consoles
+let taskDb = null;         // shared db for lesson 8's mutating tasks (persists across its tasks)
+let currentLessonIndex = 0;
+const completedLessons = new Set();
+const completedTasks = new Set(); // key: lessonId::taskIndex
+
+function freshDb(){
+  const db = new SQL.Database();
+  db.run(SCHEMA_SQL);
+  return db;
+}
+
+function runQuery(db, sql){
+  // returns {columns, rows} or throws
+  const res = db.exec(sql);
+  if(res.length === 0) return {columns:[], rows:[]};
+  return {columns:res[0].columns, rows:res[0].values};
+}
+
+function renderResultTable(container, columns, rows){
+  if(columns.length === 0){
+    container.innerHTML = `<div class="result-msg ok">Statement executed. No rows returned.</div>`;
+    return;
+  }
+  if(rows.length === 0){
+    let html = `<div class="result-msg ok">0 rows.</div>`;
+    container.innerHTML = html;
+    return;
+  }
+  let html = `<div class="result-msg ok">${rows.length} row${rows.length===1?'':'s'}</div><div class="table-scroll"><table class="result-table"><thead><tr>`;
+  columns.forEach(c=>html+=`<th>${escapeHtml(c)}</th>`);
+  html += `</tr></thead><tbody>`;
+  rows.slice(0,200).forEach(r=>{
+    html += '<tr>' + r.map(v=>`<td>${v===null?'<span style="color:#5a6270">NULL</span>':escapeHtml(String(v))}</td>`).join('') + '</tr>';
+  });
+  html += `</tbody></table></div>`;
+  container.innerHTML = html;
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ============================================================
+   4. RENDERING
+   ============================================================ */
+function highlightSql(sql){
+  const kws = ['SELECT','FROM','WHERE','AND','OR','ORDER BY','GROUP BY','HAVING','LIMIT','JOIN','INNER JOIN','LEFT JOIN','ON','AS','DISTINCT','INSERT INTO','VALUES','UPDATE','SET','DELETE FROM','IN','NOT IN','BETWEEN','LIKE','ASC','DESC','COUNT','SUM','AVG','MIN','MAX'];
+  let out = escapeHtml(sql);
+  kws.sort((a,b)=>b.length-a.length).forEach(k=>{
+    const re = new RegExp('\\b'+k.replace(' ','\\s+')+'\\b','gi');
+    out = out.replace(re, m=>`<span class="kw">${m}</span>`);
+  });
+  return out;
+}
+
+function buildSidebar(){
+  const nav = document.getElementById('navList');
+  nav.innerHTML = '';
+  lessons.forEach((l,i)=>{
+    const li = document.createElement('li');
+    li.className = 'nav-item' + (i===currentLessonIndex?' active':'') + (completedLessons.has(l.id)?' complete':'');
+    li.dataset.idx = i;
+    li.innerHTML = `<span class="idx">${String(i+1).padStart(2,'0')}</span><span>${l.title}</span><span class="done">✓</span>`;
+    li.addEventListener('click', ()=>gotoLesson(i));
+    nav.appendChild(li);
+  });
+  updateProgress();
+}
+
+function updateProgress(){
+  const fill = document.getElementById('progressFill');
+  const label = document.getElementById('progressLabel');
+  const pct = Math.round((completedLessons.size/lessons.length)*100);
+  fill.style.width = pct+'%';
+  label.textContent = `${completedLessons.size} / ${lessons.length} lessons complete`;
+}
+
+function checkLessonComplete(lesson){
+  const allDone = lesson.tasks.every((t,i)=>completedTasks.has(lesson.id+'::'+i));
+  if(allDone) completedLessons.add(lesson.id);
+  else completedLessons.delete(lesson.id);
+  buildSidebar(); // rebuild to refresh checkmarks (keeps active state via currentLessonIndex)
+  const banner = document.getElementById('banner-'+lesson.id);
+  if(banner) banner.classList.toggle('show', allDone);
+}
+
+function gotoLesson(i){
+  currentLessonIndex = i;
+  document.querySelectorAll('.lesson').forEach(el=>el.classList.remove('active'));
+  const target = document.getElementById('lesson-'+lessons[i].id);
+  if(target) target.classList.add('active');
+  buildSidebar();
+  document.querySelector('.main').scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderLessons(){
+  const root = document.getElementById('lessonsRoot');
+  root.innerHTML = '';
+  lessons.forEach((lesson, li)=>{
+    const section = document.createElement('div');
+    section.className = 'lesson' + (li===0?' active':'');
+    section.id = 'lesson-'+lesson.id;
+
+    let html = `
+      <div class="eyebrow">${lesson.eyebrow}</div>
+      <h2 class="title">${lesson.title}</h2>
+      <p class="lede">${lesson.intro}</p>
+    `;
+
+    // examples
+    html += `<section class="block"><h3 class="sub">Worked examples</h3>`;
+    lesson.examples.forEach((ex, ei)=>{
+      html += `
+        <div class="example">
+          <p class="exp-text">${ex.text}</p>
+          <pre class="code">${highlightSql(ex.sql)}</pre>
+          <div class="console" data-role="demo-console" data-lesson="${lesson.id}" data-ex="${ei}">
+            <div class="console-head"><span>Try it</span><span>editable</span></div>
+            <textarea class="sql-input" spellcheck="false">${ex.sql}</textarea>
+            <div class="console-actions">
+              <button class="primary" data-action="run-demo">Run</button>
+              <button class="ghost" data-action="reset-demo">Reset</button>
+            </div>
+            <div class="result-wrap"></div>
+          </div>
+        </div>`;
+    });
+    html += `</section>`;
+
+    // schema reference (once, first lesson gets full ref; others get compact link-style recap)
+    if(li===0){
+      html += `
+      <section class="block">
+        <h3 class="sub">Schema reference</h3>
+        <div class="schema-grid">
+          <div class="schema-card"><h4>artists</h4><ul>
+            <li><b>id</b> integer, pk</li><li><b>name</b> text</li><li><b>country</b> text</li><li><b>formed_year</b> integer</li>
+          </ul></div>
+          <div class="schema-card"><h4>albums</h4><ul>
+            <li><b>id</b> integer, pk</li><li><b>artist_id</b> → artists.id</li><li><b>title</b> text</li><li><b>release_year</b> integer</li><li><b>genre</b> text</li><li><b>price</b> real</li><li><b>stock</b> integer</li>
+          </ul></div>
+          <div class="schema-card"><h4>customers</h4><ul>
+            <li><b>id</b> integer, pk</li><li><b>name</b> text</li><li><b>city</b> text</li><li><b>joined_year</b> integer</li>
+          </ul></div>
+          <div class="schema-card"><h4>purchases</h4><ul>
+            <li><b>id</b> integer, pk</li><li><b>customer_id</b> → customers.id</li><li><b>album_id</b> → albums.id</li><li><b>purchase_date</b> text</li><li><b>quantity</b> integer</li>
+          </ul></div>
+        </div>
+      </section>`;
+    }
+
+    // tasks
+    html += `<section class="block"><h3 class="sub">Practice</h3>`;
+    lesson.tasks.forEach((t, ti)=>{
+      html += `
+        <div class="task" id="task-${lesson.id}-${ti}" data-lesson="${lesson.id}" data-task="${ti}">
+          <div class="task-head">
+            <span class="task-num">Task ${ti+1}</span>
+            <p class="task-prompt">${t.prompt}</p>
+            <span class="task-status">not checked</span>
+          </div>
+          <div class="console">
+            <div class="console-head"><span>Your query</span><span>SQLite</span></div>
+            <textarea class="sql-input" spellcheck="false">${t.starter}</textarea>
+            <div class="console-actions">
+              <button class="primary" data-action="run-task">Run</button>
+              <button data-action="check-task">Check answer</button>
+              <button class="ghost" data-action="hint-task">Hint</button>
+              <button class="ghost" data-action="solution-task">Show solution</button>
+            </div>
+            <div class="hint-row"><div class="hint-text">${t.hint}</div></div>
+            <div class="result-wrap"></div>
+          </div>
+        </div>`;
+    });
+    html += `</section>`;
+
+    html += `<div class="completion-banner" id="banner-${lesson.id}">✓ Lesson complete — nice work.</div>`;
+
+    // footer nav
+    const prevL = lessons[li-1];
+    const nextL = lessons[li+1];
+    html += `
+      <div class="lesson-footer">
+        <button class="foot-btn ghost" data-action="prev-lesson" ${!prevL?'disabled':''}>${prevL?'← '+prevL.title:''}</button>
+        <button class="foot-btn primary" data-action="next-lesson" ${!nextL?'disabled':''}>${nextL?nextL.title+' →':'All lessons complete →'}</button>
+      </div>`;
+
+    section.innerHTML = html;
+    root.appendChild(section);
+  });
+
+  wireEvents();
+}
+
+function wireEvents(){
+  // demo consoles
+  document.querySelectorAll('[data-role="demo-console"]').forEach(consoleEl=>{
+    const runBtn = consoleEl.querySelector('[data-action="run-demo"]');
+    const resetBtn = consoleEl.querySelector('[data-action="reset-demo"]');
+    const textarea = consoleEl.querySelector('textarea');
+    const resultWrap = consoleEl.querySelector('.result-wrap');
+    const originalSql = textarea.value;
+
+    runBtn.addEventListener('click', ()=>{
+      try{
+        const db = freshDb();
+        const {columns, rows} = runQuery(db, textarea.value);
+        renderResultTable(resultWrap, columns, rows);
+        db.close();
+      }catch(e){
+        resultWrap.innerHTML = `<div class="result-msg error">Error: ${escapeHtml(e.message)}</div>`;
+      }
+    });
+    resetBtn.addEventListener('click', ()=>{
+      textarea.value = originalSql;
+      resultWrap.innerHTML = '';
+    });
+  });
+
+  // tasks
+  document.querySelectorAll('.task').forEach(taskEl=>{
+    const lessonId = taskEl.dataset.lesson;
+    const taskIdx = parseInt(taskEl.dataset.task,10);
+    const lesson = lessons.find(l=>l.id===lessonId);
+    const t = lesson.tasks[taskIdx];
+    const textarea = taskEl.querySelector('textarea');
+    const resultWrap = taskEl.querySelector('.result-wrap');
+    const hintText = taskEl.querySelector('.hint-text');
+    const statusEl = taskEl.querySelector('.task-status');
+
+    taskEl.querySelector('[data-action="run-task"]').addEventListener('click', ()=>{
+      try{
+        const db = getDbForLesson(lessonId);
+        const {columns, rows} = runQuery(db, textarea.value);
+        renderResultTable(resultWrap, columns, rows);
+        if(lessonId !== 'modify') db.close();
+      }catch(e){
+        resultWrap.innerHTML = `<div class="result-msg error">Error: ${escapeHtml(e.message)}</div>`;
+      }
+    });
+
+    taskEl.querySelector('[data-action="hint-task"]').addEventListener('click', ()=>{
+      hintText.classList.toggle('show');
+    });
+
+    taskEl.querySelector('[data-action="solution-task"]').addEventListener('click', (e)=>{
+      const btn = e.currentTarget;
+      const showing = btn.textContent === 'Hide solution';
+      if(showing){
+        btn.textContent = 'Show solution';
+        const pre = taskEl.querySelector('.solution-pre');
+        if(pre) pre.remove();
+      }else{
+        btn.textContent = 'Hide solution';
+        const pre = document.createElement('pre');
+        pre.className = 'code solution-pre';
+        pre.style.marginTop = '10px';
+        pre.innerHTML = highlightSql(t.solution);
+        taskEl.querySelector('.console-actions').insertAdjacentElement('afterend', pre);
+      }
+    });
+
+    taskEl.querySelector('[data-action="check-task"]').addEventListener('click', ()=>{
+      try{
+        const checkType = t.checkType || 'query';
+        let passed = false;
+        let userResult, expectedResult;
+
+        if(checkType === 'query'){
+          const userDb = freshDb();
+          userDb.run("BEGIN;"); // no-op safety
+          const solDb = freshDb();
+          // For lesson 8 tasks that check via query, run user's raw statement(s) on a fresh db seeded like taskDb history
+          const dbToRunUser = (lessonId==='modify') ? cloneTaskDbState() : freshDb();
+          userResult = safeExec(dbToRunUser, textarea.value);
+          expectedResult = safeExec(solDb, (lessonId==='modify' ? t.checkSolution : t.solution));
+          passed = compareResults(userResult, expectedResult);
+          dbToRunUser.close(); solDb.close(); userDb.close();
+        } else if(checkType === 'rowcount'){
+          const dbToRunUser = cloneTaskDbState();
+          safeExec(dbToRunUser, textarea.value);
+          const countRes = safeExec(dbToRunUser, `SELECT COUNT(*) AS n FROM ${t.checkTable};`);
+          const n = countRes.rows.length ? countRes.rows[0][0] : -1;
+          passed = (n === t.checkExpected);
+          renderResultTable(resultWrap, countRes.columns, countRes.rows);
+          dbToRunUser.close();
+        }
+
+        if(checkType==='query' && userResult){
+          renderResultTable(resultWrap, userResult.columns, userResult.rows);
+        }
+
+        if(passed){
+          statusEl.textContent = 'correct';
+          taskEl.classList.add('solved');
+          completedTasks.add(lessonId+'::'+taskIdx);
+          // if this was a mutating task, commit its effect into the persistent task db
+          if(lessonId === 'modify'){
+            try{ taskDb.run(textarea.value); }catch(e){ /* already applied conceptually */ }
+          }
+        }else{
+          statusEl.textContent = 'not quite — try again';
+          taskEl.classList.remove('solved');
+          completedTasks.delete(lessonId+'::'+taskIdx);
+        }
+        checkLessonComplete(lesson);
+      }catch(e){
+        resultWrap.innerHTML = `<div class="result-msg error">Error: ${escapeHtml(e.message)}</div>`;
+        statusEl.textContent = 'error running query';
+      }
+    });
+  });
+
+  // footer nav
+  document.querySelectorAll('[data-action="next-lesson"]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(currentLessonIndex < lessons.length-1) gotoLesson(currentLessonIndex+1);
+    });
+  });
+  document.querySelectorAll('[data-action="prev-lesson"]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(currentLessonIndex > 0) gotoLesson(currentLessonIndex-1);
+    });
+  });
+}
+
+function safeExec(db, sql){
+  return runQuery(db, sql);
+}
+
+function compareResults(a, b){
+  if(!a || !b) return false;
+  if(a.columns.length !== b.columns.length) return false;
+  if(a.rows.length !== b.rows.length) return false;
+  const norm = rows => rows.map(r=>JSON.stringify(r)).sort();
+  const na = norm(a.rows), nb = norm(b.rows);
+  for(let i=0;i<na.length;i++){ if(na[i]!==nb[i]) return false; }
+  return true;
+}
+
+// lesson 8 needs a db whose state persists across its own tasks (insert -> update -> delete build on each other)
+function getDbForLesson(lessonId){
+  if(lessonId === 'modify'){
+    if(!taskDb) taskDb = freshDb();
+    return cloneTaskDbState();
+  }
+  return freshDb();
+}
+
+function cloneTaskDbState(){
+  if(!taskDb) taskDb = freshDb();
+  const bytes = taskDb.export();
+  return new SQL.Database(bytes);
+}
+
+/* ============================================================
+   5. BOOT
+   ============================================================ */
+initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}` })
+  .then(sql=>{
+    SQL = sql;
+    renderLessons();
+    buildSidebar();
+  })
+  .catch(err=>{
+    document.getElementById('lessonsRoot').innerHTML =
+      `<div class="loading-note" style="color:#e2705f;">Couldn't load the database engine (${escapeHtml(err.message)}). Check your connection and reload.</div>`;
+  });
+
+})();
+</script>
+</body>
+</html>
