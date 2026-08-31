@@ -36,10 +36,3 @@ The course runs real SQL against a real database, in-browser:
 - All progress, checkmarks, and database state live in memory for the current session — **reloading the page resets everything** back to the starting point.
 - Lesson 8's practice tasks (`INSERT`/`UPDATE`/`DELETE`) share one running copy of the database so changes carry over between its tasks, since edits naturally build on each other.
 
-## Tech
-
-Single HTML file — no build step, no dependencies to install. Everything (styles, logic, lesson content) lives in `sql_course.html`.
-
-## License
-
-Feel free to use, modify, and share.
